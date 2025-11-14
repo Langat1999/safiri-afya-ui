@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import db, { initializeDatabase } from './database.js';
+import mpesaService from './services/mpesa.js';
 import { mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -846,6 +847,281 @@ app.get('/api/symptoms/history', authenticateToken, async (req, res) => {
     await db.read();
     const history = db.data.symptomHistory.filter(s => s.userId === req.user.id);
     res.json(history);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
+// ============= BOOKING ENDPOINTS =============
+
+// Create a booking for consultation
+app.post('/api/bookings', async (req, res) => {
+  try {
+    const { facilityId, patientName, patientPhone, appointmentDate, appointmentTime, symptoms } = req.body;
+
+    if (!facilityId || !patientName || !patientPhone || !appointmentDate || !appointmentTime || !symptoms) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    await db.read();
+
+    // Find the facility (could be from clinics or from OSM data)
+    const facility = db.data.clinics.find(c => c.id === facilityId);
+
+    const booking = {
+      id: uuidv4(),
+      facilityId,
+      facilityName: facility?.name || 'Unknown Facility',
+      patientName,
+      patientPhone,
+      appointmentDate,
+      appointmentTime,
+      symptoms,
+      status: 'pending', // pending, confirmed, cancelled, completed
+      paymentStatus: 'unpaid', // unpaid, pending, paid, failed
+      consultationFee: facility?.consultationFee || 1000,
+      createdAt: new Date().toISOString(),
+    };
+
+    db.data.bookings.push(booking);
+    await db.write();
+
+    res.status(201).json({
+      message: 'Booking created successfully',
+      booking,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
+// Get booking by ID
+app.get('/api/bookings/:id', async (req, res) => {
+  try {
+    await db.read();
+    const booking = db.data.bookings.find(b => b.id === req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
+// ============= PAYMENT ENDPOINTS =============
+
+// Initiate M-Pesa STK Push for consultation payment
+app.post('/api/payments/initiate', async (req, res) => {
+  try {
+    const { bookingId, phoneNumber } = req.body;
+
+    if (!bookingId || !phoneNumber) {
+      return res.status(400).json({ error: 'Booking ID and phone number are required' });
+    }
+
+    await db.read();
+
+    // Find the booking
+    const booking = db.data.bookings.find(b => b.id === bookingId);
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    // Find the facility to get hospital phone number
+    const facility = db.data.clinics.find(c => c.id === booking.facilityId);
+    if (!facility) {
+      return res.status(404).json({ error: 'Facility not found' });
+    }
+
+    // Calculate revenue split
+    const revenueSplit = mpesaService.calculateRevenueSplit(booking.consultationFee);
+
+    // Initiate STK Push
+    const stkPushResult = await mpesaService.initiateSTKPush(
+      phoneNumber,
+      booking.consultationFee,
+      booking.id,
+      `Consultation at ${booking.facilityName}`
+    );
+
+    // Create payment record
+    const payment = {
+      id: uuidv4(),
+      bookingId,
+      amount: booking.consultationFee,
+      phoneNumber: mpesaService.formatPhoneNumber(phoneNumber),
+      facilityPhone: facility.mpesaNumber || facility.phone,
+      checkoutRequestId: stkPushResult.checkoutRequestId,
+      merchantRequestId: stkPushResult.merchantRequestId,
+      status: 'pending', // pending, completed, failed
+      revenueSplit: revenueSplit,
+      splitProcessed: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    db.data.payments.push(payment);
+
+    // Update booking payment status
+    const bookingIndex = db.data.bookings.findIndex(b => b.id === bookingId);
+    db.data.bookings[bookingIndex].paymentStatus = 'pending';
+
+    await db.write();
+
+    res.json({
+      message: 'STK Push initiated successfully',
+      payment: {
+        id: payment.id,
+        checkoutRequestId: payment.checkoutRequestId,
+        amount: payment.amount,
+        status: payment.status,
+      },
+      instructions: stkPushResult.customerMessage || 'Please check your phone and enter your M-Pesa PIN to complete the payment',
+    });
+  } catch (error) {
+    console.error('Payment initiation error:', error);
+    res.status(500).json({ error: error.message || 'Failed to initiate payment' });
+  }
+});
+
+// M-Pesa callback endpoint (STK Push result)
+app.post('/api/payments/mpesa/callback', async (req, res) => {
+  try {
+    console.log('M-Pesa Callback received:', JSON.stringify(req.body, null, 2));
+
+    const { Body } = req.body;
+    const stkCallback = Body?.stkCallback;
+
+    if (!stkCallback) {
+      return res.status(400).json({ error: 'Invalid callback data' });
+    }
+
+    const { MerchantRequestID, CheckoutRequestID, ResultCode, ResultDesc } = stkCallback;
+
+    await db.read();
+
+    // Find the payment record
+    const paymentIndex = db.data.payments.findIndex(
+      p => p.checkoutRequestId === CheckoutRequestID
+    );
+
+    if (paymentIndex === -1) {
+      console.error('Payment not found for CheckoutRequestID:', CheckoutRequestID);
+      return res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+    }
+
+    const payment = db.data.payments[paymentIndex];
+
+    // Update payment status based on result code
+    if (ResultCode === 0) {
+      // Payment successful
+      payment.status = 'completed';
+      payment.completedAt = new Date().toISOString();
+
+      // Extract M-Pesa receipt number if available
+      const callbackMetadata = stkCallback.CallbackMetadata?.Item || [];
+      const receiptItem = callbackMetadata.find(item => item.Name === 'MpesaReceiptNumber');
+      if (receiptItem) {
+        payment.mpesaReceiptNumber = receiptItem.Value;
+      }
+
+      // Update booking payment status
+      const bookingIndex = db.data.bookings.findIndex(b => b.id === payment.bookingId);
+      if (bookingIndex !== -1) {
+        db.data.bookings[bookingIndex].paymentStatus = 'paid';
+        db.data.bookings[bookingIndex].status = 'confirmed';
+      }
+
+      // Process revenue split
+      try {
+        const splitResult = await mpesaService.processRevenueSplit(
+          payment.amount,
+          payment.facilityPhone,
+          payment.id
+        );
+        payment.splitProcessed = true;
+        payment.splitResult = splitResult;
+        console.log('Revenue split processed successfully');
+      } catch (splitError) {
+        console.error('Revenue split failed:', splitError);
+        payment.splitProcessed = false;
+        payment.splitError = splitError.message;
+      }
+    } else {
+      // Payment failed
+      payment.status = 'failed';
+      payment.failureReason = ResultDesc;
+
+      // Update booking payment status
+      const bookingIndex = db.data.bookings.findIndex(b => b.id === payment.bookingId);
+      if (bookingIndex !== -1) {
+        db.data.bookings[bookingIndex].paymentStatus = 'failed';
+      }
+    }
+
+    db.data.payments[paymentIndex] = payment;
+    await db.write();
+
+    console.log('Payment updated:', {
+      id: payment.id,
+      status: payment.status,
+      mpesaReceiptNumber: payment.mpesaReceiptNumber,
+    });
+
+    // Respond to M-Pesa
+    res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+  } catch (error) {
+    console.error('Callback processing error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Check payment status
+app.get('/api/payments/:id/status', async (req, res) => {
+  try {
+    await db.read();
+    const payment = db.data.payments.find(p => p.id === req.params.id);
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    res.json({
+      id: payment.id,
+      status: payment.status,
+      amount: payment.amount,
+      mpesaReceiptNumber: payment.mpesaReceiptNumber,
+      completedAt: payment.completedAt,
+      failureReason: payment.failureReason,
+      splitProcessed: payment.splitProcessed,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+});
+
+// Get payment by checkout request ID (for polling)
+app.get('/api/payments/checkout/:checkoutRequestId', async (req, res) => {
+  try {
+    await db.read();
+    const payment = db.data.payments.find(
+      p => p.checkoutRequestId === req.params.checkoutRequestId
+    );
+
+    if (!payment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    res.json({
+      id: payment.id,
+      status: payment.status,
+      amount: payment.amount,
+      mpesaReceiptNumber: payment.mpesaReceiptNumber,
+      completedAt: payment.completedAt,
+      failureReason: payment.failureReason,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Server error: ' + error.message });
   }

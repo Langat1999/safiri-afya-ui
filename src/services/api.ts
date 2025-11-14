@@ -260,6 +260,62 @@ export const symptomsAPI = {
   },
 };
 
+// ============= BOOKINGS =============
+
+export const bookingsAPI = {
+  create: async (data: {
+    facilityId: string;
+    patientName: string;
+    patientPhone: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    symptoms: string;
+  }) => {
+    const response = await fetch(`${API_BASE_URL}/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create booking');
+    return response.json();
+  },
+
+  getById: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch booking');
+    return response.json();
+  },
+};
+
+// ============= PAYMENTS =============
+
+export const paymentsAPI = {
+  initiate: async (data: { bookingId: string; phoneNumber: string }) => {
+    const response = await fetch(`${API_BASE_URL}/payments/initiate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to initiate payment');
+    }
+    return response.json();
+  },
+
+  getStatus: async (paymentId: string) => {
+    const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/status`);
+    if (!response.ok) throw new Error('Failed to fetch payment status');
+    return response.json();
+  },
+
+  getByCheckoutRequestId: async (checkoutRequestId: string) => {
+    const response = await fetch(`${API_BASE_URL}/payments/checkout/${checkoutRequestId}`);
+    if (!response.ok) throw new Error('Failed to fetch payment');
+    return response.json();
+  },
+};
+
 // ============= HEALTH CHECK =============
 
 export const healthAPI = {

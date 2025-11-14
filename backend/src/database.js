@@ -25,7 +25,9 @@ export async function initializeDatabase() {
         rating: 4.5,
         services: ["General Practice", "Emergency", "Pediatrics"],
         hours: "24/7",
-        phone: "+254 20 123 4567",
+        phone: "+254712345678",
+        mpesaNumber: "254712345678",
+        consultationFee: 1000,
         coordinates: { lat: -1.2864, lng: 36.8172 }
       },
       {
@@ -36,7 +38,9 @@ export async function initializeDatabase() {
         rating: 4.8,
         services: ["General Practice", "Maternal Health", "Dentistry"],
         hours: "Mon-Fri: 8AM-6PM",
-        phone: "+254 20 234 5678",
+        phone: "+254723456789",
+        mpesaNumber: "254723456789",
+        consultationFee: 1500,
         coordinates: { lat: -1.3192, lng: 36.7073 }
       },
       {
@@ -47,7 +51,9 @@ export async function initializeDatabase() {
         rating: 4.3,
         services: ["General Practice", "Laboratory", "Pharmacy"],
         hours: "Mon-Sat: 7AM-8PM",
-        phone: "+254 20 345 6789",
+        phone: "+254734567890",
+        mpesaNumber: "254734567890",
+        consultationFee: 800,
         coordinates: { lat: -1.2833, lng: 36.7833 }
       },
       {
@@ -58,7 +64,9 @@ export async function initializeDatabase() {
         rating: 4.6,
         services: ["General Practice", "Pediatrics", "Vaccination"],
         hours: "Mon-Sun: 8AM-10PM",
-        phone: "+254 20 456 7890",
+        phone: "+254745678901",
+        mpesaNumber: "254745678901",
+        consultationFee: 1200,
         coordinates: { lat: -1.2667, lng: 36.8083 }
       }
     ],
@@ -83,7 +91,9 @@ export async function initializeDatabase() {
       }
     ],
     appointments: [],
-    symptomHistory: []
+    symptomHistory: [],
+    bookings: [],
+    payments: []
     };
   } else {
     // Ensure all arrays exist
@@ -92,6 +102,8 @@ export async function initializeDatabase() {
     db.data.doctors = db.data.doctors || [];
     db.data.appointments = db.data.appointments || [];
     db.data.symptomHistory = db.data.symptomHistory || [];
+    db.data.bookings = db.data.bookings || [];
+    db.data.payments = db.data.payments || [];
   }
 
   await db.write();
