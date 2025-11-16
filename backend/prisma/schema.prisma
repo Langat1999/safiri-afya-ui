@@ -82,7 +82,7 @@ model Clinic {
   longitude       Float
   distance        String?
   rating          Float    @default(0)
-  services        String   // JSON array of services
+  services        String[] // PostgreSQL native array
   hours           String
   phone           String
   mpesaNumber     String?
@@ -102,7 +102,7 @@ model Doctor {
   id           String   @id @default(uuid())
   name         String
   specialty    String
-  availability String   // JSON array of days
+  availability String[] // PostgreSQL native array
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -196,18 +196,22 @@ enum PaymentStatus {
 // ============= PAYMENTS =============
 
 model Payment {
-  id                 String        @id @default(uuid())
-  bookingId          String
-  amount             Int
-  phoneNumber        String
-  mpesaReceiptNumber String?
-  transactionId      String?
-  status             PaymentStatus @default(PENDING)
-  developerAmount    Int?          // Commission amount
-  facilityAmount     Int?          // Amount to facility
-  errorMessage       String?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  id                  String        @id @default(uuid())
+  bookingId           String
+  amount              Int
+  phoneNumber         String
+  checkoutRequestId   String?       // M-Pesa checkout request ID
+  mpesaReceiptNumber  String?
+  transactionId       String?
+  status              PaymentStatus @default(PENDING)
+  developerAmount     Int?          // Commission amount
+  facilityAmount      Int?          // Amount to facility
+  errorMessage        String?
+  failureReason       String?       // Detailed failure reason
+  completedAt         DateTime?     // When payment was completed
+  splitProcessed      Boolean       @default(false) // Whether revenue split was processed
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   // Relations
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
@@ -215,6 +219,7 @@ model Payment {
   @@index([bookingId])
   @@index([status])
   @@index([transactionId])
+  @@index([checkoutRequestId])
   @@map("payments")
 }
 
@@ -257,16 +262,17 @@ model PasswordReset {
 
 model AdminLog {
   id        String   @id @default(uuid())
-  adminId   String
+  userId    String
   action    String
   details   String?
-  timestamp DateTime @default(now())
+  ipAddress String?
+  createdAt DateTime @default(now())
 
   // Relations
-  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([adminId])
-  @@index([timestamp])
+  @@index([userId])
+  @@index([createdAt])
   @@map("admin_logs")
 }
 

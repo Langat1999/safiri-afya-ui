@@ -13,36 +13,35 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-// Helper functions for array fields (SQLite stores as JSON strings)
+// Helper functions for PostgreSQL
+// PostgreSQL supports native arrays, so we don't need JSON stringify/parse
 
 /**
- * Parse clinic services from JSON string to array
+ * Parse clinic services (PostgreSQL native arrays - no conversion needed)
  */
 export const parseClinicServices = (clinic) => {
   if (!clinic) return null;
+  // PostgreSQL returns arrays directly, just ensure it's an array
   return {
     ...clinic,
-    services: typeof clinic.services === 'string'
-      ? JSON.parse(clinic.services)
-      : clinic.services || []
+    services: Array.isArray(clinic.services) ? clinic.services : []
   };
 };
 
 /**
- * Parse doctor availability from JSON string to array
+ * Parse doctor availability (PostgreSQL native arrays - no conversion needed)
  */
 export const parseDoctorAvailability = (doctor) => {
   if (!doctor) return null;
+  // PostgreSQL returns arrays directly, just ensure it's an array
   return {
     ...doctor,
-    availability: typeof doctor.availability === 'string'
-      ? JSON.parse(doctor.availability)
-      : doctor.availability || []
+    availability: Array.isArray(doctor.availability) ? doctor.availability : []
   };
 };
 
 /**
- * Parse symptom recommendations from JSON string to array
+ * Parse symptom recommendations
  */
 export const parseSymptomRecommendations = (symptom) => {
   if (!symptom) return null;
@@ -55,26 +54,28 @@ export const parseSymptomRecommendations = (symptom) => {
 };
 
 /**
- * Prepare clinic data for database insertion
+ * Prepare clinic data for database insertion (PostgreSQL native arrays)
  */
 export const prepareClinicForDB = (clinicData) => {
   return {
     ...clinicData,
+    // PostgreSQL accepts arrays directly, just ensure it's an array
     services: Array.isArray(clinicData.services)
-      ? JSON.stringify(clinicData.services)
-      : clinicData.services
+      ? clinicData.services
+      : (typeof clinicData.services === 'string' ? [clinicData.services] : [])
   };
 };
 
 /**
- * Prepare doctor data for database insertion
+ * Prepare doctor data for database insertion (PostgreSQL native arrays)
  */
 export const prepareDoctorForDB = (doctorData) => {
   return {
     ...doctorData,
+    // PostgreSQL accepts arrays directly, just ensure it's an array
     availability: Array.isArray(doctorData.availability)
-      ? JSON.stringify(doctorData.availability)
-      : doctorData.availability
+      ? doctorData.availability
+      : (typeof doctorData.availability === 'string' ? [doctorData.availability] : [])
   };
 };
 

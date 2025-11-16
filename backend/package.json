@@ -5,8 +5,11 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "npx prisma migrate deploy && node src/server.js",
-    "dev": "node --watch src/server.js"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "build": "npx prisma generate",
+    "postinstall": "npx prisma generate",
+    "deploy": "npx prisma migrate deploy && node src/server.js"
   },
   "keywords": [
     "healthcare",
