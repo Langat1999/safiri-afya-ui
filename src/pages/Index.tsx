@@ -2,9 +2,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Hero } from "@/components/Hero";
 import { SymptomChecker } from "@/components/SymptomChecker";
 import { ClinicLocator } from "@/components/ClinicLocator";
-import { BookingForm } from "@/components/BookingForm";
 import { HealthPrompt } from "@/components/HealthPrompt";
+import { HealthNews } from "@/components/HealthNews";
 import { Navbar } from "@/components/Navbar";
+import { AdSlot } from "@/components/AdSlot";
 import { Heart } from "lucide-react";
 
 const Index = () => {
@@ -17,10 +18,26 @@ const Index = () => {
       {/* Main Content */}
       <main>
         <Hero language={language} />
+
+        {/* Ad 1: Banner after Hero - Non-intrusive */}
+        <section className="py-4 bg-muted/20">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <AdSlot type="banner" closeable className="max-w-5xl mx-auto" />
+          </div>
+        </section>
+
         <SymptomChecker language={language} />
+
+        {/* Ad 2: Card between sections - Natural break */}
+        <section className="py-8 bg-background">
+          <div className="container px-4 sm:px-6 lg:px-8">
+            <AdSlot type="card" className="max-w-4xl mx-auto" />
+          </div>
+        </section>
+
         <HealthPrompt language={language} />
         <ClinicLocator language={language} />
-        <BookingForm language={language} />
+        <HealthNews language={language} />
       </main>
 
       {/* Footer */}

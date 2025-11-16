@@ -1,0 +1,280 @@
+// Prisma Schema for Safiri Afya Health Platform
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============= USER MANAGEMENT =============
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  isActive  Boolean  @default(true)
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Profile information
+  phone         String?
+  dateOfBirth   DateTime?
+  gender        Gender?
+  location      String?
+
+  // Preferences
+  language      String    @default("en")
+  theme         String    @default("light")
+  timezone      String    @default("Africa/Nairobi")
+
+  // Notification settings
+  emailNotifications  Boolean @default(true)
+  smsNotifications    Boolean @default(true)
+  pushNotifications   Boolean @default(true)
+
+  // Privacy settings
+  dataSharing         DataSharingLevel @default(MINIMAL)
+
+  // Relations
+  appointments    Appointment[]
+  symptomHistory  SymptomHistory[]
+  bookings        Booking[]
+  adminLogs       AdminLog[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum DataSharingLevel {
+  NONE
+  MINIMAL
+  FULL
+}
+
+// ============= HEALTHCARE FACILITIES =============
+
+model Clinic {
+  id              String   @id @default(uuid())
+  name            String
+  location        String
+  latitude        Float
+  longitude       Float
+  distance        String?
+  rating          Float    @default(0)
+  services        String   // JSON array of services
+  hours           String
+  phone           String
+  mpesaNumber     String?
+  consultationFee Int      @default(1000)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  bookings Booking[]
+
+  @@index([latitude, longitude])
+  @@index([rating])
+  @@map("clinics")
+}
+
+model Doctor {
+  id           String   @id @default(uuid())
+  name         String
+  specialty    String
+  availability String   // JSON array of days
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  appointments Appointment[]
+
+  @@index([specialty])
+  @@map("doctors")
+}
+
+// ============= APPOINTMENTS & BOOKINGS =============
+
+model Appointment {
+  id         String            @id @default(uuid())
+  userId     String
+  doctorId   String
+  doctorName String
+  date       String // Format: YYYY-MM-DD
+  time       String // Format: HH:MM
+  reason     String
+  name       String
+  email      String
+  phone      String
+  status     AppointmentStatus @default(CONFIRMED)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([doctorId])
+  @@index([date, time])
+  @@index([status])
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  userId          String?       // Optional - can book without account
+  facilityId      String
+  facilityName    String
+  patientName     String
+  patientEmail    String?
+  patientPhone    String
+  appointmentDate String // Format: YYYY-MM-DD
+  appointmentTime String // Format: HH:MM
+  symptoms        String
+  status          BookingStatus @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  consultationFee Int           @default(1000)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  clinic   Clinic    @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([userId])
+  @@index([facilityId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([appointmentDate, appointmentTime])
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+// ============= PAYMENTS =============
+
+model Payment {
+  id                 String        @id @default(uuid())
+  bookingId          String
+  amount             Int
+  phoneNumber        String
+  mpesaReceiptNumber String?
+  transactionId      String?
+  status             PaymentStatus @default(PENDING)
+  developerAmount    Int?          // Commission amount
+  facilityAmount     Int?          // Amount to facility
+  errorMessage       String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([status])
+  @@index([transactionId])
+  @@map("payments")
+}
+
+// ============= SYMPTOM CHECKER =============
+
+model SymptomHistory {
+  id              String   @id @default(uuid())
+  userId          String?  // Optional - can use without account
+  symptoms        String
+  analysis        String?
+  riskLevel       String?
+  recommendations String?
+  ageRange        String?
+  gender          String?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([riskLevel])
+  @@index([createdAt])
+  @@map("symptom_history")
+}
+
+// ============= ADMIN & SECURITY =============
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("password_resets")
+}
+
+model AdminLog {
+  id        String   @id @default(uuid())
+  adminId   String
+  action    String
+  details   String?
+  timestamp DateTime @default(now())
+
+  // Relations
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([timestamp])
+  @@map("admin_logs")
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}

@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, LogOut, Settings, Activity, Globe } from 'lucide-react';
+import { User, LogOut, Settings, Activity, Globe, Newspaper } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const Navbar = () => {
@@ -48,6 +48,21 @@ export const Navbar = () => {
           </Link>
 
           <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const newsSection = document.getElementById('health-news');
+                if (newsSection) {
+                  newsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="hidden sm:flex items-center space-x-2"
+            >
+              <Newspaper className="h-4 w-4" />
+              <span>{language === 'en' ? 'Health News' : 'Habari za Afya'}</span>
+            </Button>
+
             <Button
               variant="outline"
               size="sm"

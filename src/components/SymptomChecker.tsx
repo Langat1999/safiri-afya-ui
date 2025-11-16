@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle, Phone, MapPin, Home, Calendar, Stethoscope } from "lucide-react";
+import { AlertCircle, CheckCircle, Phone, MapPin, Home, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 import { symptomsAPI } from "@/services/api";
 
@@ -57,15 +57,15 @@ export const SymptomChecker = ({ language }: SymptomCheckerProps) => {
           badge: "Low Risk",
           title: "Common Condition",
           message: "Rest and hydrate.",
-          button1: "Home Care Tips",
-          button2: "Book Consultation",
+          button1: "Homecare Tips",
+          button2: "Find Clinic",
         },
         medium: {
           badge: "Medium Risk",
           title: "Needs Attention",
           message: "See a doctor within 24–48 hrs.",
           button1: "Find Clinic",
-          button2: "Book Today",
+          button2: "Homecare Tips",
         },
         high: {
           badge: "High Risk",
@@ -108,14 +108,14 @@ export const SymptomChecker = ({ language }: SymptomCheckerProps) => {
           title: "Hali ya Kawaida",
           message: "Pumzika na kunywa maji mengi.",
           button1: "Ushauri wa Nyumbani",
-          button2: "Weka Miadi",
+          button2: "Tafuta Kliniki",
         },
         medium: {
           badge: "Hatari ya Kati",
           title: "Inahitaji Umakini",
           message: "Ona daktari ndani ya masaa 24–48.",
           button1: "Tafuta Kliniki",
-          button2: "Weka Leo",
+          button2: "Ushauri wa Nyumbani",
         },
         high: {
           badge: "Hatari Kubwa",
@@ -200,10 +200,10 @@ export const SymptomChecker = ({ language }: SymptomCheckerProps) => {
       // Navigate to clinic locator
       document.getElementById('clinic-locator')?.scrollIntoView({ behavior: 'smooth' });
     } else {
-      // Show home care tips (could navigate to a tips section)
+      // Low risk: Show homecare tips
       toast.info(language === 'en'
-        ? "Home care tips: Rest, stay hydrated, and monitor your symptoms."
-        : "Ushauri wa nyumbani: Pumzika, nywa maji mengi, na fuatilia dalili zako.");
+        ? "Homecare tips: Rest, stay hydrated, and monitor your symptoms closely."
+        : "Ushauri wa nyumbani: Pumzika, nywa maji mengi, na fuatilia dalili zako kwa karibu.");
     }
   };
 
@@ -211,9 +211,14 @@ export const SymptomChecker = ({ language }: SymptomCheckerProps) => {
     if (urgency === 'high') {
       // Find nearest emergency room
       document.getElementById('clinic-locator')?.scrollIntoView({ behavior: 'smooth' });
+    } else if (urgency === 'medium') {
+      // Medium risk: Show homecare tips
+      toast.info(language === 'en'
+        ? "Homecare tips: Rest, stay hydrated, monitor symptoms, and seek medical attention if they worsen."
+        : "Ushauri wa nyumbani: Pumzika, nywa maji mengi, fuatilia dalili, na tafuta huduma ya daktari ikiwa zinazidi.");
     } else {
-      // Book appointment/consultation
-      document.getElementById('book-doctor')?.scrollIntoView({ behavior: 'smooth' });
+      // Low risk: Navigate to clinic locator
+      document.getElementById('clinic-locator')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -391,7 +396,8 @@ export const SymptomChecker = ({ language }: SymptomCheckerProps) => {
                         variant="outline"
                       >
                         {result.urgency === 'high' && <MapPin className="w-4 h-4 mr-2" />}
-                        {(result.urgency === 'medium' || result.urgency === 'low') && <Calendar className="w-4 h-4 mr-2" />}
+                        {result.urgency === 'medium' && <Home className="w-4 h-4 mr-2" />}
+                        {result.urgency === 'low' && <MapPin className="w-4 h-4 mr-2" />}
                         {getRiskLevelConfig(result.urgency).button2}
                       </Button>
                     </div>

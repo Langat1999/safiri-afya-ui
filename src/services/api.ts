@@ -316,6 +316,64 @@ export const paymentsAPI = {
   },
 };
 
+// ============= USER PROFILE =============
+
+export const profileAPI = {
+  get: async () => {
+    return authFetch(`${API_BASE_URL}/user/profile`);
+  },
+
+  update: async (data: {
+    name?: string;
+    phone?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    location?: string;
+    profilePicture?: string;
+  }) => {
+    return authFetch(`${API_BASE_URL}/user/profile`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  changePassword: async (data: {
+    currentPassword: string;
+    newPassword: string;
+  }) => {
+    return authFetch(`${API_BASE_URL}/user/change-password`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+// ============= USER SETTINGS =============
+
+export const settingsAPI = {
+  get: async () => {
+    return authFetch(`${API_BASE_URL}/user/settings`);
+  },
+
+  update: async (data: {
+    notifications?: any;
+    privacy?: any;
+    preferences?: any;
+  }) => {
+    return authFetch(`${API_BASE_URL}/user/settings`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteAccount: async (password: string) => {
+    return authFetch(`${API_BASE_URL}/user/account`, {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    });
+  },
+};
+
 // ============= HEALTH CHECK =============
 
 export const healthAPI = {

@@ -15,7 +15,19 @@ export async function initializeDatabase() {
   // Initialize with default structure if empty or missing
   if (!db.data || Object.keys(db.data).length === 0) {
     db.data = {
-      users: [],
+      users: [
+        // Default admin user
+        {
+          id: "admin-001",
+          email: "admin@safiri.com",
+          password: "$2a$10$YourHashedPasswordHere", // Will be properly hashed in server.js
+          name: "System Administrator",
+          role: "super_admin",
+          createdAt: new Date().toISOString(),
+          lastLogin: null,
+          isActive: true
+        }
+      ],
       clinics: [
       {
         id: "1",
@@ -93,7 +105,16 @@ export async function initializeDatabase() {
     appointments: [],
     symptomHistory: [],
     bookings: [],
-    payments: []
+    payments: [],
+    adminLogs: [],
+    systemSettings: {
+      maintenanceMode: false,
+      allowNewRegistrations: true,
+      mpesaEnabled: true,
+      newsEnabled: true,
+      symptomCheckerEnabled: true,
+      appVersion: "1.0.0"
+    }
     };
   } else {
     // Ensure all arrays exist
@@ -104,6 +125,15 @@ export async function initializeDatabase() {
     db.data.symptomHistory = db.data.symptomHistory || [];
     db.data.bookings = db.data.bookings || [];
     db.data.payments = db.data.payments || [];
+    db.data.adminLogs = db.data.adminLogs || [];
+    db.data.systemSettings = db.data.systemSettings || {
+      maintenanceMode: false,
+      allowNewRegistrations: true,
+      mpesaEnabled: true,
+      newsEnabled: true,
+      symptomCheckerEnabled: true,
+      appVersion: "1.0.0"
+    };
   }
 
   await db.write();

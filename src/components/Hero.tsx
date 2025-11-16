@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Heart, MapPin, Calendar, Sparkles } from "lucide-react";
+import { Heart, MapPin, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-healthcare.jpg";
 
 interface HeroProps {
@@ -10,19 +10,17 @@ export const Hero = ({ language }: HeroProps) => {
   const content = {
     en: {
       title: "Your Health Journey Starts Here",
-      subtitle: "AI-powered symptom checking, clinic location, and easy doctor booking - all in one place",
+      subtitle: "AI-powered symptom checking and clinic location - access quality healthcare when you need it",
       prompt: "Afya ni uhai, tunza mwili wako leo",
       checkSymptoms: "Check Symptoms",
       findClinics: "Find Clinics",
-      bookDoctor: "Book a Doctor",
     },
     sw: {
       title: "Safari Yako ya Afya Inaanza Hapa",
-      subtitle: "Tathmini ya dalili kwa AI, mahali pa kliniki, na uhudumu rahisi wa madaktari - kila kitu mahali pamoja",
+      subtitle: "Tathmini ya dalili kwa AI na mahali pa kliniki - pata huduma za afya wakati unapohitaji",
       prompt: "Afya ni uhai, tunza mwili wako leo",
       checkSymptoms: "Angalia Dalili",
       findClinics: "Tafuta Kliniki",
-      bookDoctor: "Weka Miadi na Daktari",
     },
   };
 
@@ -61,8 +59,8 @@ export const Hero = ({ language }: HeroProps) => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
-            <Button 
-              variant="hero" 
+            <Button
+              variant="hero"
               size="xl"
               className="w-full sm:w-auto"
               onClick={() => document.getElementById('symptom-checker')?.scrollIntoView({ behavior: 'smooth' })}
@@ -70,23 +68,14 @@ export const Hero = ({ language }: HeroProps) => {
               <Heart className="w-5 h-5" />
               {t.checkSymptoms}
             </Button>
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               size="xl"
               className="w-full sm:w-auto"
               onClick={() => document.getElementById('clinic-locator')?.scrollIntoView({ behavior: 'smooth' })}
             >
               <MapPin className="w-5 h-5" />
               {t.findClinics}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="xl"
-              className="w-full sm:w-auto border-2 hover:bg-primary/5"
-              onClick={() => document.getElementById('book-doctor')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              <Calendar className="w-5 h-5" />
-              {t.bookDoctor}
             </Button>
           </div>
 
