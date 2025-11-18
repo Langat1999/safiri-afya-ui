@@ -1,17 +1,35 @@
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN', 'SUPER_ADMIN');
+
+-- CreateEnum
+CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY');
+
+-- CreateEnum
+CREATE TYPE "DataSharingLevel" AS ENUM ('NONE', 'MINIMAL', 'FULL');
+
+-- CreateEnum
+CREATE TYPE "AppointmentStatus" AS ENUM ('CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW');
+
+-- CreateEnum
+CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('UNPAID', 'PENDING', 'PAID', 'FAILED', 'REFUNDED');
+
 -- CreateTable
 CREATE TABLE "users" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "role" TEXT NOT NULL DEFAULT 'USER',
+    "role" "Role" NOT NULL DEFAULT 'USER',
     "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "lastLogin" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "lastLogin" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "phone" TEXT,
-    "dateOfBirth" DATETIME,
-    "gender" TEXT,
+    "dateOfBirth" TIMESTAMP(3),
+    "gender" "Gender",
     "location" TEXT,
     "language" TEXT NOT NULL DEFAULT 'en',
     "theme" TEXT NOT NULL DEFAULT 'light',
@@ -19,40 +37,46 @@ CREATE TABLE "users" (
     "emailNotifications" BOOLEAN NOT NULL DEFAULT true,
     "smsNotifications" BOOLEAN NOT NULL DEFAULT true,
     "pushNotifications" BOOLEAN NOT NULL DEFAULT true,
-    "dataSharing" TEXT NOT NULL DEFAULT 'MINIMAL'
+    "dataSharing" "DataSharingLevel" NOT NULL DEFAULT 'MINIMAL',
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "clinics" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "location" TEXT NOT NULL,
-    "latitude" REAL NOT NULL,
-    "longitude" REAL NOT NULL,
+    "latitude" DOUBLE PRECISION NOT NULL,
+    "longitude" DOUBLE PRECISION NOT NULL,
     "distance" TEXT,
-    "rating" REAL NOT NULL DEFAULT 0,
-    "services" TEXT NOT NULL,
+    "rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "services" TEXT[],
     "hours" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "mpesaNumber" TEXT,
     "consultationFee" INTEGER NOT NULL DEFAULT 1000,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "clinics_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "doctors" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "specialty" TEXT NOT NULL,
-    "availability" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "availability" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "doctors_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "appointments" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "doctorId" TEXT NOT NULL,
     "doctorName" TEXT NOT NULL,
@@ -62,16 +86,16 @@ CREATE TABLE "appointments" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'CONFIRMED',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "appointments_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "appointments_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "doctors" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "status" "AppointmentStatus" NOT NULL DEFAULT 'CONFIRMED',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "appointments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "bookings" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "userId" TEXT,
     "facilityId" TEXT NOT NULL,
     "facilityName" TEXT NOT NULL,
@@ -81,35 +105,40 @@ CREATE TABLE "bookings" (
     "appointmentDate" TEXT NOT NULL,
     "appointmentTime" TEXT NOT NULL,
     "symptoms" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'PENDING',
-    "paymentStatus" TEXT NOT NULL DEFAULT 'UNPAID',
+    "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
+    "paymentStatus" "PaymentStatus" NOT NULL DEFAULT 'UNPAID',
     "consultationFee" INTEGER NOT NULL DEFAULT 1000,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "bookings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "bookings_facilityId_fkey" FOREIGN KEY ("facilityId") REFERENCES "clinics" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "bookings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "payments" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "amount" INTEGER NOT NULL,
     "phoneNumber" TEXT NOT NULL,
+    "checkoutRequestId" TEXT,
     "mpesaReceiptNumber" TEXT,
     "transactionId" TEXT,
-    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
     "developerAmount" INTEGER,
     "facilityAmount" INTEGER,
     "errorMessage" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "payments_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "bookings" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "failureReason" TEXT,
+    "completedAt" TIMESTAMP(3),
+    "splitProcessed" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "symptom_history" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "userId" TEXT,
     "symptoms" TEXT NOT NULL,
     "analysis" TEXT,
@@ -117,35 +146,42 @@ CREATE TABLE "symptom_history" (
     "recommendations" TEXT,
     "ageRange" TEXT,
     "gender" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "symptom_history_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "symptom_history_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "password_resets" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "code" TEXT NOT NULL,
-    "expiresAt" DATETIME NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "password_resets_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "admin_logs" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "adminId" TEXT NOT NULL,
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "details" TEXT,
-    "timestamp" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "admin_logs_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "ipAddress" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "admin_logs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "system_settings" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "value" TEXT NOT NULL,
-    "updatedAt" DATETIME NOT NULL
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "system_settings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -203,6 +239,9 @@ CREATE INDEX "payments_status_idx" ON "payments"("status");
 CREATE INDEX "payments_transactionId_idx" ON "payments"("transactionId");
 
 -- CreateIndex
+CREATE INDEX "payments_checkoutRequestId_idx" ON "payments"("checkoutRequestId");
+
+-- CreateIndex
 CREATE INDEX "symptom_history_userId_idx" ON "symptom_history"("userId");
 
 -- CreateIndex
@@ -221,10 +260,31 @@ CREATE INDEX "password_resets_code_idx" ON "password_resets"("code");
 CREATE INDEX "password_resets_expiresAt_idx" ON "password_resets"("expiresAt");
 
 -- CreateIndex
-CREATE INDEX "admin_logs_adminId_idx" ON "admin_logs"("adminId");
+CREATE INDEX "admin_logs_userId_idx" ON "admin_logs"("userId");
 
 -- CreateIndex
-CREATE INDEX "admin_logs_timestamp_idx" ON "admin_logs"("timestamp");
+CREATE INDEX "admin_logs_createdAt_idx" ON "admin_logs"("createdAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "system_settings_key_key" ON "system_settings"("key");
+
+-- AddForeignKey
+ALTER TABLE "appointments" ADD CONSTRAINT "appointments_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "appointments" ADD CONSTRAINT "appointments_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "doctors"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_facilityId_fkey" FOREIGN KEY ("facilityId") REFERENCES "clinics"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "payments" ADD CONSTRAINT "payments_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "bookings"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "symptom_history" ADD CONSTRAINT "symptom_history_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "admin_logs" ADD CONSTRAINT "admin_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

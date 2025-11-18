@@ -32,23 +32,13 @@ async function main() {
       dateOfBirth: new Date('1990-01-01'),
       gender: 'MALE',
       location: 'Nairobi, Kenya',
-      emailVerified: true,
-      settings: {
-        notifications: {
-          email: true,
-          sms: true,
-          push: true,
-        },
-        privacy: {
-          shareData: 'MINIMAL',
-          showProfile: false,
-        },
-        preferences: {
-          language: 'en',
-          theme: 'light',
-          timezone: 'Africa/Nairobi',
-        },
-      },
+      language: 'en',
+      theme: 'light',
+      timezone: 'Africa/Nairobi',
+      emailNotifications: true,
+      smsNotifications: true,
+      pushNotifications: true,
+      dataSharing: 'MINIMAL',
     },
   });
   console.log(`✅ Admin created: ${adminUser.email} / Admin@123456`);
@@ -173,8 +163,16 @@ async function main() {
 
   const createdClinics = [];
   for (const clinic of clinics) {
+    // Transform clinic data to match Prisma schema
+    const { coordinates, operatingHours, email, description, fees, facilities, insuranceAccepted, ...clinicData } = clinic;
+
     const created = await prisma.clinic.create({
-      data: clinic,
+      data: {
+        ...clinicData,
+        latitude: coordinates.lat,
+        longitude: coordinates.lng,
+        hours: operatingHours,
+      },
     });
     createdClinics.push(created);
     console.log(`  ✅ ${created.name}`);
@@ -317,8 +315,15 @@ async function main() {
   ];
 
   for (const doctor of doctors) {
+    // Transform doctor data to match Prisma schema (only name, specialty, availability)
+    const { name, specialty, availability } = doctor;
+
     const created = await prisma.doctor.create({
-      data: doctor,
+      data: {
+        name,
+        specialty,
+        availability,
+      },
     });
     console.log(`  ✅ ${created.name} - ${created.specialty}`);
   }
@@ -329,14 +334,12 @@ async function main() {
     data: {
       key: 'maintenance_mode',
       value: 'false',
-      description: 'Enable/disable maintenance mode',
     },
   });
   await prisma.systemSetting.create({
     data: {
       key: 'platform_commission',
       value: '15',
-      description: 'Platform commission percentage',
     },
   });
 
