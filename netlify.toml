@@ -6,5 +6,4 @@
   NODE_VERSION = "18"
 
 [context.production.environment]
-  # Example: set production-specific env vars here if needed
-  # API_URL = "https://api.afyakaribu.example"
+  VITE_API_URL = "https://safiri-afya-ui.vercel.app/api"
