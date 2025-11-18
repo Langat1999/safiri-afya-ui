@@ -6,8 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+
+  // Supabase-specific settings
+  // Use Transaction pooler for migrations: postgres://...supabase.co:5432/...
+  // Use Session pooler for Prisma Client: postgres://...supabase.co:6543/...?pgbouncer=true
 }
 
 // ============= USER MANAGEMENT =============

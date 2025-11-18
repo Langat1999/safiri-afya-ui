@@ -1,0 +1,25 @@
+# Vercel ignore file - exclude frontend build from backend deployment
+
+# Frontend files
+src/
+public/
+index.html
+vite.config.ts
+tsconfig.json
+tsconfig.app.json
+tsconfig.node.json
+postcss.config.js
+tailwind.config.js
+
+# Development files
+.env.local
+.env.development
+*.log
+node_modules/
+
+# Backend generated files (will be generated during build)
+backend/generated/
+
+# Documentation
+README.md
+PITCH_DECK.md

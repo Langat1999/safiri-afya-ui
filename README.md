@@ -6,60 +6,66 @@ Full-stack healthcare platform connecting Kenyans to quality medical services. F
 
 ---
 
-## 🚀 Quick Deploy (15 Minutes)
+## 🚀 Quick Deploy (15 Minutes) - 100% FREE!
 
 ### Prerequisites
 - GitHub account
-- [Render account](https://render.com/) (free tier works)
+- [Supabase account](https://supabase.com/) (free tier: 500MB database)
+- [Vercel account](https://vercel.com/) (free tier: 100GB bandwidth)
 - M-Pesa sandbox credentials from [Safaricom](https://developer.safaricom.co.ke/)
 
-### Step 1: Deploy Backend (10 min)
+### Step 1: Create Supabase Database (3 min)
 
-1. Go to https://dashboard.render.com/
-2. Click **"New +" → "Blueprint"**
-3. Connect repository: `Langat1999/safiri-afya-ui`
-4. Click **"Apply"** (creates database + backend)
+1. Go to https://supabase.com/ → **"New Project"**
+2. **Name:** safiri-afya | **Region:** Southeast Asia (Singapore)
+3. Generate strong **database password** (save it!)
+4. Go to **Settings → Database** → Copy TWO connection strings:
+   - **Session mode (port 6543):** Add `?pgbouncer=true` → Save as `DATABASE_URL`
+   - **Transaction mode (port 5432):** Save as `DIRECT_URL`
 
-### Step 2: Add Environment Variables (2 min)
+### Step 2: Deploy Backend on Vercel (7 min)
 
-In Render → Your service → Environment tab:
+1. Go to https://vercel.com/new → **"Import Git Repository"**
+2. Select `Langat1999/safiri-afya-ui` → **Deploy**
+3. Go to **Settings → Environment Variables** and add:
 
 ```bash
+DATABASE_URL=postgresql://postgres.xxxxx:[PASSWORD]@...pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://postgres.xxxxx:[PASSWORD]@...pooler.supabase.com:5432/postgres
+NODE_ENV=production
+JWT_SECRET=your-64-char-secret
 MPESA_CONSUMER_KEY=your_key
 MPESA_CONSUMER_SECRET=your_secret
 MPESA_PASSKEY=your_passkey
 MPESA_SHORTCODE=174379
-MPESA_ENVIRONMENT=sandbox
-MPESA_CALLBACK_URL=https://safiri-afya-api.onrender.com/api/payments/mpesa/callback
-MPESA_RESULT_URL=https://safiri-afya-api.onrender.com/api/payments/mpesa/result
-DEVELOPER_MPESA_NUMBER=254713809220
-DEVELOPER_COMMISSION_PERCENTAGE=15
-OPENROUTER_API_KEY=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
-GUARDIAN_API_KEY=7dbc521f-3149-4416-b103-de0ff728e4ce
-FROM_EMAIL=noreply@safiriafya.com
+MPESA_CALLBACK_URL=https://YOUR-VERCEL-DOMAIN.vercel.app/api/payments/mpesa/callback
 ALLOWED_ORIGINS=https://your-netlify-url.netlify.app
 ```
 
-### Step 3: Seed Database (1 min)
+4. Copy your Vercel domain from **Settings → Domains**
+5. Update `MPESA_CALLBACK_URL` with your Vercel domain
+6. **Deployments → Redeploy**
 
-In Render Shell:
+### Step 3: Seed Database (2 min)
+
 ```bash
+# Local terminal
 cd backend
-npm run seed
+DIRECT_URL="your-supabase-direct-url" npm run seed
 ```
 
 Adds: 8 clinics + 10 doctors + admin (admin@safiriafya.com / Admin@123456)
 
-### Step 4: Connect Frontend
+### Step 4: Connect Frontend (2 min)
 
-On Netlify → Environment variables:
+Netlify → **Environment variables:**
+```bash
+VITE_API_URL=https://YOUR-VERCEL-DOMAIN.vercel.app/api
 ```
-VITE_API_URL=https://safiri-afya-api.onrender.com/api
-```
 
-Then trigger deploy.
+**Trigger deploy** → Done! 🎉
 
-**Done!** 🎉
+📖 **Full Guide:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Complete setup with troubleshooting
 
 ---
 
@@ -78,9 +84,10 @@ Then trigger deploy.
 ## 🛠️ Tech Stack
 
 **Frontend:** React 18 + TypeScript + Vite + Tailwind + shadcn/ui
-**Backend:** Node.js 18 + Express 5 + PostgreSQL + Prisma ORM
+**Backend:** Node.js 18 + Express 5 + Vercel Serverless
+**Database:** Supabase PostgreSQL (free tier: 500MB)
 **Services:** M-Pesa Daraja, SendGrid, OpenRouter AI
-**Deploy:** Render (backend) + Netlify (frontend)
+**Deploy:** Supabase (DB) + Vercel (API) + Netlify (Frontend) - **100% FREE!**
 
 ---
 
@@ -143,7 +150,7 @@ ALLOWED_ORIGINS=https://...
 
 ### Frontend
 ```bash
-VITE_API_URL=https://your-backend.onrender.com/api
+VITE_API_URL=https://your-vercel-domain.vercel.app/api
 ```
 
 ---
@@ -159,26 +166,42 @@ VITE_API_URL=https://your-backend.onrender.com/api
 │   │   ├── middleware/    # Auth, validation
 │   │   └── services/      # M-Pesa, email
 │   └── prisma/
-│       ├── schema.prisma  # Database schema
+│       ├── schema.prisma  # Database schema (Supabase PostgreSQL)
 │       └── migrations/    # DB migrations
-├── render.yaml       # Render deployment
+├── vercel.json       # Vercel serverless config
+├── DEPLOYMENT_GUIDE.md  # Complete deployment guide
 └── package.json      # Dependencies
 ```
 
 ---
 
-## 🚢 Deployment
+## 🚢 Deployment (100% FREE Tiers!)
 
-**Render (Backend):**
-- Use Blueprint (automatic)
-- Or manual: PostgreSQL + Web Service
+**Supabase (Database):**
+- Free: 500MB PostgreSQL database
+- 2GB bandwidth/month
+- Connection pooling (pgbouncer)
+- Get connection strings: Settings → Database
+- Upgrade: $25/month for backups
+
+**Vercel (Backend API):**
+- Free: 100GB bandwidth/month
+- Serverless Functions (10s timeout)
+- Auto-deploy from GitHub
+- Environment variables via dashboard
 - Build: `npm install && npm run build`
-- Start: `npm run deploy`
+- Upgrade: $20/month for 60s timeout
 
 **Netlify (Frontend):**
+- Free: 100GB bandwidth/month
 - Auto-deploy from GitHub
 - Build: `npm run build`
 - Publish: `dist/`
+- Configure: `VITE_API_URL` environment variable
+
+**Total Cost:** **FREE** for 10,000-50,000 monthly users!
+
+**Full Guide:** [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Step-by-step with troubleshooting
 
 ---
 
