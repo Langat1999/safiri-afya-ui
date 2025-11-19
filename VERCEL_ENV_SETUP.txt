@@ -1,0 +1,73 @@
+================================================================================
+VERCEL ENVIRONMENT VARIABLES - QUICK REFERENCE
+================================================================================
+
+Go to: https://vercel.com/dashboard → Your Project → Settings → Environment Variables
+
+Add each variable below (click "Add" for each one):
+
+================================================================================
+REQUIRED - BACKEND VARIABLES
+================================================================================
+
+1. PORT = 3001
+2. NODE_ENV = production
+3. DATABASE_URL = postgresql://postgres.vixtrsbooqqxidqzpxza:NEW_PASSWORD@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+4. DIRECT_URL = postgresql://postgres.vixtrsbooqqxidqzpxza:NEW_PASSWORD@aws-1-eu-west-1.pooler.supabase.com:5432/postgres
+5. JWT_SECRET = ca38f5861535635ec316bb737b650e61d360f9ce80ff44b885e56011bc9cbb7360c8b980cf45b992a3dce5be19b710b232b0927365e47b670e251734fcc7510b
+
+================================================================================
+REQUIRED - SENDGRID (EMAIL)
+================================================================================
+
+6. SENDGRID_API_KEY = SG.YOUR_KEY_HERE
+7. FROM_EMAIL = noreply@safiriafya.com
+8. APP_URL = https://your-app.vercel.app
+
+================================================================================
+M-PESA PAYMENT (Use sandbox for testing, production when ready)
+================================================================================
+
+9. MPESA_ENVIRONMENT = sandbox
+10. MPESA_CONSUMER_KEY = PAW87o1bIJEU3hAyhauUAXuZnwpDNANnLS7vFrA9UUGZXmSR
+11. MPESA_CONSUMER_SECRET = mmDn4f8Hy0hnHvzUXxGnJ8uUoKuB10yL8pP5uQj4KTGWwDmF7zD4ttPShaUheoJc
+12. MPESA_SHORTCODE = 174379
+13. MPESA_PASSKEY = bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919
+14. MPESA_CALLBACK_URL = https://your-app.vercel.app/api/payments/mpesa/callback
+15. MPESA_RESULT_URL = https://your-app.vercel.app/api/payments/mpesa/result
+16. DEVELOPER_MPESA_NUMBER = 254713809220
+17. DEVELOPER_COMMISSION_PERCENTAGE = 15
+
+================================================================================
+API KEYS (Current ones work, but rotate if exposed)
+================================================================================
+
+18. OPENROUTER_API_KEY = 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
+19. GUARDIAN_API_KEY = 7dbc521f-3149-4416-b103-de0ff728e4ce
+
+================================================================================
+CORS & FRONTEND
+================================================================================
+
+20. ALLOWED_ORIGINS = http://localhost:8080,http://localhost:5173,https://your-app.vercel.app
+21. VITE_API_URL = https://your-app.vercel.app/api
+
+================================================================================
+REPLACE THESE PLACEHOLDERS:
+================================================================================
+
+- NEW_PASSWORD: Your new Supabase database password
+- YOUR_KEY_HERE: Your SendGrid API key
+- your-app.vercel.app: Your actual Vercel domain
+
+================================================================================
+IMPORTANT NOTES:
+================================================================================
+
+1. For each variable, select which environments: Production, Preview, Development
+2. Most variables should be added to ALL environments
+3. MPESA: Use sandbox for testing, production credentials when ready
+4. After adding all variables, redeploy your app
+5. Test the deployment thoroughly
+
+================================================================================
