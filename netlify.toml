@@ -4,6 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  # Skip secrets scanning for backend folder (deployed separately to Vercel)
+  SECRETS_SCAN_OMIT_PATHS = "backend/.env,backend/prisma"
 
 [context.production.environment]
   VITE_API_URL = "https://safiri-afya-ui.vercel.app/api"
