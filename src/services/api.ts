@@ -374,6 +374,16 @@ export const settingsAPI = {
   },
 };
 
+// ============= HEALTH NEWS =============
+
+export const newsAPI = {
+  getHealthNews: async () => {
+    const response = await fetch(`${API_BASE_URL}/news/health`);
+    if (!response.ok) throw new Error('Failed to fetch health news');
+    return response.json();
+  },
+};
+
 // ============= HEALTH CHECK =============
 
 export const healthAPI = {
