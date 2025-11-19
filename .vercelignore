@@ -1,22 +1,24 @@
-# Vercel ignore file - exclude frontend build from backend deployment
-
-# Frontend files
-src/
-public/
-index.html
-vite.config.ts
-tsconfig.json
-tsconfig.app.json
-tsconfig.node.json
-postcss.config.js
-tailwind.config.js
+# Vercel ignore file
+# Note: We're deploying both frontend (dist/) and backend (backend/)
+# Only ignore development and build files that aren't needed in production
 
 # Development files
 .env.local
 .env.development
 *.log
-node_modules/
 
-# Documentation
+# Documentation (large files not needed at runtime)
 README.md
 PITCH_DECK.md
+DEPLOYMENT_GUIDE.md
+VERCEL_DEPLOYMENT.md
+
+# Build artifacts (already built, don't need sources)
+.netlify/
+
+# Frontend source is built to dist/, so we can ignore some frontend configs
+# but we MUST keep backend/ directory intact
+vite.config.ts
+tsconfig.json
+tsconfig.app.json
+tsconfig.node.json
