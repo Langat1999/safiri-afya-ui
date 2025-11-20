@@ -1,21 +1,5 @@
-# Vercel ignore file
-# Note: We're deploying both frontend (dist/) and backend (backend/)
-# Only ignore development and build files that aren't needed in production
-
-# Development files
+# Only ignore files that are truly not needed for deployment
 .env.local
 .env.development
 *.log
-
-# Documentation (large files not needed at runtime)
-README.md
-PITCH_DECK.md
-DEPLOYMENT_GUIDE.md
-VERCEL_DEPLOYMENT.md
-
-# Build artifacts (already built, don't need sources)
 .netlify/
-
-# Keep build configs - Vercel needs these to build the project
-# vite.config.ts - Required for Vite build
-# tsconfig.*.json - Required for TypeScript compilation
