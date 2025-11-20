@@ -1,12 +1,19 @@
 # Safiri Afya (Afya Karibu Kenya)
 
-**AI-Powered Healthcare Platform for Kenya**
+**AI-Powered Healthcare Platform for Kenya** 🇰🇪
 
-Full-stack healthcare platform connecting Kenyans to quality medical services. Features AI symptom checking (English + Swahili), clinic locator, appointment booking, and M-Pesa payments.
+[![Live Demo](https://img.shields.io/badge/demo-live-success)](https://safiriafya.netlify.app)
+[![Backend API](https://img.shields.io/badge/API-live-success)](https://safiri-afya.vercel.app/api/health)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+Full-stack healthcare platform connecting Kenyans to quality medical services. Features AI symptom checking (bilingual English + Swahili), interactive clinic locator, doctor appointment booking, and M-Pesa payment integration.
+
+**🌐 Live Application:** https://safiriafya.netlify.app
+**🔌 Backend API:** https://safiri-afya.vercel.app/api
 
 ---
 
-## 🚀 Quick Deploy on Vercel (10 Minutes) - 100% FREE!
+## 🚀 Current Deployment (Split Architecture)
 
 ### Architecture
 ```
