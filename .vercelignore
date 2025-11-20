@@ -16,9 +16,6 @@ VERCEL_DEPLOYMENT.md
 # Build artifacts (already built, don't need sources)
 .netlify/
 
-# Frontend source is built to dist/, so we can ignore some frontend configs
-# but we MUST keep backend/ directory intact
-vite.config.ts
-tsconfig.json
-tsconfig.app.json
-tsconfig.node.json
+# Keep build configs - Vercel needs these to build the project
+# vite.config.ts - Required for Vite build
+# tsconfig.*.json - Required for TypeScript compilation
