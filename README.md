@@ -1,6 +1,7 @@
 # Safiri Afya (Afya Karibu Kenya)
 
 **AI-Powered Healthcare Platform for Kenya** 🇰🇪
+C:\Users\user\OneDrive\Desktop\safiri-afya-ui\src\assets\README.jpg
 
 [![Live Demo](https://img.shields.io/badge/demo-live-success)](https://safiriafya.netlify.app)
 [![Backend API](https://img.shields.io/badge/API-live-success)](https://safiri-afya.vercel.app/api/health)
